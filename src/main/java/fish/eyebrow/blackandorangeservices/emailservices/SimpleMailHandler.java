@@ -1,5 +1,6 @@
 package fish.eyebrow.blackandorangeservices.emailservices;
 
+import fish.eyebrow.blackandorangeservices.emailservices.enums.SecurityTypes;
 import fish.eyebrow.blackandorangeservices.emailservices.exceptions.CredentialNotSetException;
 import fish.eyebrow.blackandorangeservices.emailservices.exceptions.MissingPropertyException;
 
@@ -18,11 +19,13 @@ public class SimpleMailHandler {
 	private int emailPort;
 
 	private boolean requiresAuthentication;
-	private int securityLayer;
+	private SecurityTypes securityLayer;
+
+	private boolean credentialsSet = false;
 
 	public void sendEmail(InternetAddress[] recipients, String subject, String text)
 			throws MessagingException, CredentialNotSetException {
-		if (senderAddress == null || senderPassword == null || emailHost == null)
+		if (!credentialAreSet())
 			throw new CredentialNotSetException();
 
 		Properties properties = new Properties();
@@ -61,23 +64,30 @@ public class SimpleMailHandler {
 	}
 
 	public void generateCredentials(Properties properties) throws MissingPropertyException {
-		final String senderAddress = (String) properties.get("senderAddress");
-		final String senderPassword = (String) properties.get("senderPassword");
-		final String emailHost = (String) properties.get("emailHost");
-		final String emailPort = (String) properties.get("emailPort");
-		final String requiresAuthentication = (String) properties.get("requiresAuthentication");
-		final String securityLayer = (String) properties.get("securityLayer");
+		final String[] setProperties = {
+				(String) properties.get("senderAddress"),
+				(String) properties.get("senderPassword"),
+				(String) properties.get("emailHost"),
+				(String) properties.get("emailPort"),
+				(String) properties.get("requiresAuthentication"),
+				(String) properties.get("securityLayer")
+		};
 
-		if (senderAddress == null || senderPassword == null || emailHost == null || emailPort == null ||
-				requiresAuthentication == null || securityLayer == null)
-			throw new MissingPropertyException();
+		for (String property : setProperties) {
+			if (property == null) {
+				credentialsSet = false;
+				throw new MissingPropertyException();
+			}
+		}
 
-		setSenderAddress(senderAddress);
-		setSenderPassword(senderPassword);
-		setEmailHost(emailHost);
-		setEmailPort(emailPort);
-		setRequiresAuthentication(requiresAuthentication);
-		setSecurityLayer(securityLayer);
+		setSenderAddress(setProperties[0]);
+		setSenderPassword(setProperties[1]);
+		setEmailHost(setProperties[2]);
+		setEmailPort(setProperties[3]);
+		setRequiresAuthentication(setProperties[4]);
+		setSecurityLayer(setProperties[5]);
+
+		credentialsSet = true;
 	}
 
 	public void generateCredentials(String propertiesPath) throws IOException, MissingPropertyException {
@@ -138,12 +148,12 @@ public class SimpleMailHandler {
 		this.requiresAuthentication = Boolean.valueOf(requiresAuthentication);
 	}
 
-	public int getSecurityLayer() {
+	public SecurityTypes getSecurityLayer() {
 		return securityLayer;
 	}
 
-	public void setSecurityLayer(int securityLayer) {
-		this.securityLayer = securityLayer < 3 && securityLayer > -1 ? securityLayer : SecurityTypes.NONE;
+	public void setSecurityLayer(SecurityTypes securityLayer) {
+		this.securityLayer = securityLayer;
 	}
 
 	public void setSecurityLayer(String securityLayer) {
@@ -154,14 +164,21 @@ public class SimpleMailHandler {
 		else if (lowerSecurityLayer.equals("ssl"))
 			setSecurityLayer(SecurityTypes.SSL);
 		else {
-			this.securityLayer = Character.isDigit(securityLayer.charAt(0)) ?
-					Integer.valueOf(String.valueOf(securityLayer.charAt(0))) : SecurityTypes.NONE;
+			final boolean inputIsNumber = Character.isDigit(securityLayer.charAt(0));
+			final int inputAsNumber = Integer.valueOf(String.valueOf(securityLayer.charAt(0)));
+
+			if (inputIsNumber)
+				this.securityLayer = inputAsNumber != SecurityTypes.NONE.getNumber() ?
+						(inputAsNumber == SecurityTypes.TLS.getNumber() ? SecurityTypes.TLS :
+								inputAsNumber == SecurityTypes.SSL.getNumber() ? SecurityTypes.SSL :
+										SecurityTypes.NONE) :
+						SecurityTypes.NONE;
+			else
+				this.securityLayer = SecurityTypes.NONE;
 		}
 	}
 
-	class SecurityTypes {
-		public static final int NONE = 0;
-		public static final int TLS = 1;
-		public static final int SSL = 2;
+	public boolean credentialAreSet() {
+		return credentialsSet;
 	}
 }

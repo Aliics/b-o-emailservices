@@ -47,6 +47,21 @@ class SimpleMailHandlerTest {
 	}
 
 	@Test
+	void sendEmail2() throws CredentialNotSetException, MessagingException { // this test case will only work if the
+		// generate credentials test cases are run before this
+		if (!simpleMailHandler.credentialAreSet())
+			throw new CredentialNotSetException();
+
+		String[] recipients = {
+				"Aliics@hotmail.com"
+		};
+		String subject = "Send Email Test Case 2";
+		String text = "This is sent with credentials that have already been sent.";
+
+		simpleMailHandler.sendEmail(recipients, subject, text);
+	}
+
+	@Test
 	void generateCredentials() throws MissingPropertyException, IOException {
 		Properties properties = new Properties();
 		properties.load(new FileInputStream(GENERATE_CREDENTIALS_PATH));
