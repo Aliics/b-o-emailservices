@@ -48,7 +48,7 @@ public class SimpleMailHandler {
 		mimeMessage.setFrom(senderAddress);
 		mimeMessage.setRecipients(MimeMessage.RecipientType.TO, recipients);
 		mimeMessage.setSubject(subject);
-		mimeMessage.setText(text);
+		mimeMessage.setContent(text, "text/html; charset=UTF-8");
 
 		Transport.send(mimeMessage);
 	}
