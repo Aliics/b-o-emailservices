@@ -23,6 +23,8 @@ public class SimpleMailHandler {
 
 	private boolean credentialsSet = false;
 
+	private boolean usesHtmlContent = false;
+
 	public void sendEmail(InternetAddress[] recipients, String subject, String text)
 			throws MessagingException, CredentialNotSetException {
 		if (!credentialAreSet())
@@ -48,7 +50,10 @@ public class SimpleMailHandler {
 		mimeMessage.setFrom(senderAddress);
 		mimeMessage.setRecipients(MimeMessage.RecipientType.TO, recipients);
 		mimeMessage.setSubject(subject);
-		mimeMessage.setContent(text, "text/html; charset=UTF-8");
+		if (usesHtmlContent)
+			mimeMessage.setContent(text, "text/html; charset=UTF-8");
+		else
+			mimeMessage.setText(text);
 
 		Transport.send(mimeMessage);
 	}
@@ -180,5 +185,13 @@ public class SimpleMailHandler {
 
 	public boolean credentialAreSet() {
 		return credentialsSet;
+	}
+
+	public boolean usesHtmlContent() {
+		return usesHtmlContent;
+	}
+
+	public void setUsesHtmlContent(boolean usesHtmlContent) {
+		this.usesHtmlContent = usesHtmlContent;
 	}
 }
