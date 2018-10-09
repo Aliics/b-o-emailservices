@@ -6,7 +6,7 @@
 
     <groupId>fish.eyebrow.blackandorangeservices</groupId>
     <artifactId>emailservices</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>25082018</version>
     <build>
         <plugins>
             <plugin>
